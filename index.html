@@ -11,6 +11,7 @@
         <h1>Welcome to the Age of AI</h1>
         <p>Discover how artificial intelligence is changing the world around you</p>
         <button class="btn">Explore</button>
+        <button class="btn-ghost" id="openAuth">Log in / Register</button>
     </section>
 
     <section class="what-is-ai">
@@ -63,6 +64,50 @@
         Learn and create with AI, DigitalSchool 2026
     </footer>
 
-    <script src="script.js"></script>
+    <!-- Auth Modal -->
+    <div class="modal-overlay" id="authModal" aria-hidden="true">
+        <div class="modal" role="dialog" aria-modal="true" aria-label="Log in or register">
+            <button class="modal-close" id="modalClose" aria-label="Close">&times;</button>
+
+            <div class="auth-tabs">
+                <button class="tab active" data-tab="login">Log In</button>
+                <button class="tab" data-tab="register">Register</button>
+            </div>
+
+            <form id="loginForm" class="auth-form active" novalidate>
+                <h3>Welcome back</h3>
+                <label>Email
+                    <input type="email" name="email" required placeholder="you@school.com">
+                </label>
+                <label>Password
+                    <input type="password" name="password" required minlength="6" placeholder="••••••••">
+                </label>
+                <button type="submit" class="btn-submit">Log In</button>
+                <p class="msg" id="loginMsg"></p>
+            </form>
+
+            <form id="registerForm" class="auth-form" novalidate>
+                <h3>Create your account</h3>
+                <label>Full name
+                    <input type="text" name="full_name" placeholder="Alex Doe">
+                </label>
+                <label>Email
+                    <input type="email" name="email" required placeholder="you@school.com">
+                </label>
+                <label>Grade (6–12)
+                    <input type="number" name="grade_level" min="6" max="12" placeholder="9">
+                </label>
+                <label>Password
+                    <input type="password" name="password" required minlength="6" placeholder="At least 6 characters">
+                </label>
+                <button type="submit" class="btn-submit">Register</button>
+                <p class="msg" id="registerMsg"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Supabase client + app logic (defer = run in order after DOM parse) -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+    <script defer src="script.js"></script>
 </body>
 </html>

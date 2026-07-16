@@ -1,4 +1,4 @@
-// AI Learning Hub - Interactive Features
+// AI Learning Hub — Standalone Login / Register page
 // For students aged 12-18
 
 // ===== Supabase config =====
@@ -8,44 +8,13 @@ const SUPABASE_URL = 'YOUR_SUPABASE_URL';
 const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
 const SUPABASE_CONFIGURED = SUPABASE_URL !== 'YOUR_SUPABASE_URL' && SUPABASE_ANON_KEY !== 'YOUR_SUPABASE_ANON_KEY';
 
+// Where to send the user after a successful login / signup
+const AFTER_AUTH = 'index.html';
+
 let supabase = null;
 if (SUPABASE_CONFIGURED && window.supabase) {
     supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
-
-// ===== Explore button: scroll to first section =====
-document.querySelector('.hero .btn').addEventListener('click', () => {
-    document.querySelector('.what-is-ai').scrollIntoView({ behavior: 'smooth' });
-});
-
-// ===== Auth modal logic =====
-const modal = document.getElementById('authModal');
-const openBtn = document.getElementById('openAuth');
-const closeBtn = document.getElementById('modalClose');
-
-function openModal() {
-    modal.classList.add('open');
-    modal.setAttribute('aria-hidden', 'false');
-}
-function closeModal() {
-    modal.classList.remove('open');
-    modal.setAttribute('aria-hidden', 'true');
-}
-
-openBtn.addEventListener('click', async () => {
-    // If already logged in, the button acts as "Log out"
-    if (supabase) {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-            await supabase.auth.signOut();
-            return;
-        }
-    }
-    openModal();
-});
-closeBtn.addEventListener('click', closeModal);
-modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
 
 // ===== Tabs (login / register) =====
 const tabs = document.querySelectorAll('.tab');
@@ -53,13 +22,15 @@ const forms = {
     login: document.getElementById('loginForm'),
     register: document.getElementById('registerForm')
 };
-tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-        tabs.forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        Object.values(forms).forEach(f => f.classList.remove('active'));
-        forms[tab.dataset.tab].classList.add('active');
-    });
+
+function switchTab(name) {
+    tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+    Object.values(forms).forEach(f => f.classList.toggle('active', f.id === name + 'Form'));
+}
+
+tabs.forEach(tab => tab.addEventListener('click', () => switchTab(tab.dataset.tab)));
+document.querySelectorAll('[data-goto]').forEach(a => {
+    a.addEventListener('click', (e) => { e.preventDefault(); switchTab(a.dataset.goto); });
 });
 
 // ===== Message helper =====
@@ -74,7 +45,7 @@ forms.register.addEventListener('submit', async (e) => {
     const msg = document.getElementById('registerMsg');
 
     if (!SUPABASE_CONFIGURED) {
-        return showMsg(msg, 'Supabase not configured yet — add your URL and key in script.js.', 'error');
+        return showMsg(msg, 'Supabase not configured yet — add your URL and key in login.js.', 'error');
     }
 
     showMsg(msg, 'Creating account…', 'info');
@@ -95,8 +66,8 @@ forms.register.addEventListener('submit', async (e) => {
     if (data.session === null) {
         showMsg(msg, 'Check your email to confirm your account, then log in.', 'success');
     } else {
-        showMsg(msg, 'Account created! Welcome aboard.', 'success');
-        setTimeout(closeModal, 1200);
+        showMsg(msg, 'Account created! Redirecting…', 'success');
+        setTimeout(() => { location.href = AFTER_AUTH; }, 1000);
     }
 });
 
@@ -106,7 +77,7 @@ forms.login.addEventListener('submit', async (e) => {
     const msg = document.getElementById('loginMsg');
 
     if (!SUPABASE_CONFIGURED) {
-        return showMsg(msg, 'Supabase not configured yet — add your URL and key in script.js.', 'error');
+        return showMsg(msg, 'Supabase not configured yet — add your URL and key in login.js.', 'error');
     }
 
     showMsg(msg, 'Logging in…', 'info');
@@ -118,18 +89,16 @@ forms.login.addEventListener('submit', async (e) => {
 
     if (error) return showMsg(msg, error.message, 'error');
 
-    showMsg(msg, 'Logged in!', 'success');
-    setTimeout(closeModal, 800);
+    showMsg(msg, 'Logged in! Redirecting…', 'success');
+    setTimeout(() => { location.href = AFTER_AUTH; }, 800);
 });
 
-// ===== React to login / logout =====
+// ===== Already logged in? Go straight to the site =====
 if (supabase) {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session?.user) location.href = AFTER_AUTH;
+    });
     supabase.auth.onAuthStateChange((_event, session) => {
-        if (session?.user) {
-            const name = session.user.user_metadata?.full_name || session.user.email;
-            openBtn.textContent = 'Log out (' + name + ')';
-        } else {
-            openBtn.textContent = 'Log in / Register';
-        }
+        if (session?.user) location.href = AFTER_AUTH;
     });
 }
